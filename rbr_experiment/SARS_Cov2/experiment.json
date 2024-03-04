@@ -1,0 +1,9 @@
+{
+  "workdir": "/blue/boucher/rvarki/justin_analysis",
+  "reference": "/blue/boucher/share/SARS-CoV2/",
+  "script": "/home/jkim8/gitlab/rerepair/reRePair",
+  "pfp": "/home/jkim8/pfp/build/pfp++",
+  "ref": ["25","50","100","200","400"],
+  "prefix": ["SARS-CoV2"]
+}
+

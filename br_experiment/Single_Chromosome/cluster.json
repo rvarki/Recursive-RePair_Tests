@@ -1,0 +1,62 @@
+{
+    "__default__": {
+        "account": "boucher",
+        "qos": "boucher-b",
+        "cpus-per-task": "32",
+        "Nodes": 1,
+        "mem": "256gb",
+        "runtime": "24:00:00",
+        "jobname": "br",
+        "mail": "rvarki@ufl.edu",
+        "mail_type": "FAIL",
+        "out": "logs/br/chr1/br_full.%j.log",
+        "exclusive": "",
+        "specificPartition": ""
+    },
+
+    "pfp": {
+        "account": "boucher",
+        "qos": "boucher-b",
+        "cpus-per-task": "32",
+        "Nodes": 1,
+        "mem": "256gb",
+        "runtime": "24:00:00",
+        "jobname": "br_pfp",
+        "mail": "rvarki@ufl.edu",
+        "mail_type": "FAIL",
+        "out": "logs/br/chr1/pfp.%j.log",
+        "exclusive": "",
+        "specificPartition": ""
+    },
+
+    "br": {
+        "account": "boucher",
+        "qos": "boucher-b",
+        "cpus-per-task": "128",
+        "Nodes": 1,
+        "mem": "256gb",
+        "runtime": "24:00:00",
+        "jobname": "br",
+        "mail": "rvarki@ufl.edu",
+        "mail_type": "FAIL",
+        "out": "logs/br/chr1/br.%j.log",
+        "exclusive": "--exclusive",
+        "specificPartition": "--partition=hpg-default"
+    },
+
+    "brc": {
+        "account": "boucher",
+        "qos": "boucher-b",
+        "cpus-per-task": "128",
+        "Nodes": 1,
+        "mem": "256gb",
+        "runtime": "24:00:00",
+        "jobname": "brc",
+        "mail": "rvarki@ufl.edu",
+        "mail_type": "FAIL",
+        "out": "logs/br/chr1/brc.%j.log",
+        "exclusive": "-exclusive",
+        "specificPartition": "--partition=hpg-default"
+    }
+
+}

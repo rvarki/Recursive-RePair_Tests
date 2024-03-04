@@ -1,0 +1,112 @@
+import os
+
+# Constrain the wildcards
+wildcard_constraints:
+    ref= '|'.join([re.escape(x) for x in config["ref"]]),
+    prefix= '|'.join([re.escape(x) for x in config["prefix"]]),
+
+# Configure the working directory for the script
+workdir: config['workdir']
+
+outfiles = []
+
+# Output files to generate
+for prefix in config["prefix"]:
+    for ref in config["ref"]:
+        outfiles.append("output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.C".format(prefix=prefix,ref=ref))
+        outfiles.append("output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.R".format(prefix=prefix,ref=ref))
+        outfiles.append("output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.out".format(prefix=prefix,ref=ref))
+        outfiles.append("output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.log".format(prefix=prefix,ref=ref))
+
+        # outfiles.append("output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.dict".format(prefix=prefix,ref=ref))
+        # outfiles.append("output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.parse".format(prefix=prefix,ref=ref))
+        # outfiles.append("output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.dicz".format(prefix=prefix,ref=ref))
+        # outfiles.append("output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.dicz.len".format(prefix=prefix,ref=ref))
+
+        # outfiles.append("output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.parse.dicz".format(prefix=prefix,ref=ref))
+        # outfiles.append("output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.parse.dicz.len".format(prefix=prefix,ref=ref))
+        # outfiles.append("output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.parse.dict".format(prefix=prefix,ref=ref))
+        # outfiles.append("output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.parse.parse".format(prefix=prefix,ref=ref))
+        
+
+#######################################################################################################
+
+rule all:
+    input: outfiles
+
+rule pfp:
+    input:
+        ref    = config["reference"] + "SARS.{ref}k.fa",
+        pfp    = config["pfp"],
+    benchmark: "benchmarks/rbr/{prefix}/{prefix}.{ref}.rbr.pfp.benchmark.txt",
+    threads: 32,
+    params:
+        outdir = "output/rbr/{prefix}/{ref}",
+        outprefix = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr"
+    output:
+        dicz = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.dicz",
+        dicz_len = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.dicz.len",
+        dict = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.dict",
+        parse = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.parse"
+    shell:
+        """
+        module load gcc
+        mkdir -p {params.outdir}
+        {input.pfp} -f {input.ref} -w 10 -p 100 -c -o {params.outprefix} -j {threads} --tmp-dir ${{SLURM_TMPDIR}} --acgt-only 
+        """
+
+rule pfp_recursive:
+    input:
+        parse = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.parse",
+        pfp = config["pfp"]
+    benchmark: "benchmarks/rbr/{prefix}/{prefix}.{ref}.rbr.pfp_recursive.benchmark.txt",
+    threads: 32,
+    params:
+        outprefix = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.parse"
+    output:
+        parse_dicz = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.parse.dicz",
+        parse_dicz_len = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.parse.dicz.len",
+        parse_dict = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.parse.dict",
+        parse_parse = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.parse.parse"
+    shell:
+        """
+        module load gcc
+        {input.pfp} -i {input.parse} -w 10 -p 100 -c -o {params.outprefix} -j {threads} --tmp-dir ${{SLURM_TMPDIR}}
+        """
+
+rule rbr:
+    input:
+        dicz = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.dicz",
+        parse_dicz = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.parse.dicz",
+        parse_parse = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.parse.parse",
+        script = config["script"]
+    benchmark: "benchmarks/rbr/{prefix}/{prefix}.{ref}.rbr.script.benchmark.txt",
+    threads: 32,
+    params:
+        outprefix = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr"
+    output:
+        C = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.C",
+        R = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.R",
+        log = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.log"
+    shell:
+        """
+        module load gcc
+        {input.script} {params.outprefix} -t {threads} -k
+        """
+
+rule rbrc:
+    input:
+        C = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.C",
+        R = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.R",
+        script = config["script"],
+    benchmark: "benchmarks/rbr/{prefix}/{prefix}.{ref}.rbr.decompress.benchmark.txt",
+    threads: 32,
+    params:
+        outprefix = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr"
+    output:
+        decompress = "output/rbr/{prefix}/{ref}/{prefix}.{ref}.rbr.out"
+    shell:
+        """
+        module load gcc
+        {input.script} -d {params.outprefix} -t {threads} -k
+        """

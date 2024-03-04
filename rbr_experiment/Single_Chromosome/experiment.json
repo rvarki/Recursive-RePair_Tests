@@ -1,0 +1,11 @@
+{
+  "workdir": "/blue/boucher/rvarki/justin_analysis",
+  "reference": "/blue/boucher/jkim8/refs/C_1.txt.gz",
+  "script": "/home/jkim8/gitlab/rerepair/reRePair",
+  "pfp": "/home/jkim8/pfp/build/pfp++",
+  "ref": ["50","100"],
+  "prefix": ["chr1"],
+  "sample": "/blue/boucher/jkim8/rbr_tests/T2Tsamples/samples",
+  "vcf": "/blue/boucher/share/T2T_Complete/vcf/1000_Genomes_Project/all_samples_3202/1KGP.CHM13v2.0.chr1.recalibrated.snp_indel.pass.vcf.gz"
+}
+

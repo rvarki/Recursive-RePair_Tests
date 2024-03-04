@@ -1,0 +1,76 @@
+{
+    "__default__": {
+        "account": "boucher",
+        "qos": "boucher-b",
+        "cpus-per-task": "32",
+        "Nodes": 1,
+        "mem": "256gb",
+        "runtime": "24:00:00",
+        "jobname": "rbr_full",
+        "mail": "rvarki@ufl.edu",
+        "mail_type": "FAIL",
+        "out": "logs/rbr/SARS-CoV2/rbr_full.%j.log",
+        "exclusive": "",
+        "specificPartition": ""
+    },
+
+    "pfp": {
+        "account": "boucher",
+        "qos": "boucher-b",
+        "cpus-per-task": "32",
+        "Nodes": 1,
+        "mem": "256gb",
+        "runtime": "24:00:00",
+        "jobname": "rbr_pfp",
+        "mail": "rvarki@ufl.edu",
+        "mail_type": "FAIL",
+        "out": "logs/rbr/SARS-CoV2/pfp.%j.log",
+        "exclusive": "",
+        "specificPartition": ""
+    },
+
+    "pfp_recursive": {
+        "account": "boucher",
+        "qos": "boucher-b",
+        "cpus-per-task": "32",
+        "Nodes": 1,
+        "mem": "256gb",
+        "runtime": "24:00:00",
+        "jobname": "rbr_pfp_recursive",
+        "mail": "rvarki@ufl.edu",
+        "mail_type": "FAIL",
+        "out": "logs/rbr/SARS-CoV2/pfp_recursive.%j.log",
+        "exclusive": "",
+        "specificPartition": ""
+    },
+
+    "rbr": {
+        "account": "boucher",
+        "qos": "boucher-b",
+        "cpus-per-task": "128",
+        "Nodes": 1,
+        "mem": "256gb",
+        "runtime": "24:00:00",
+        "jobname": "rbr",
+        "mail": "rvarki@ufl.edu",
+        "mail_type": "FAIL",
+        "out": "logs/rbr/SARS-CoV2/rbr.%j.log",
+        "exclusive": "--exclusive",
+        "specificPartition": "--partition=hpg-default"
+    },
+
+    "rbrc": {
+        "account": "boucher",
+        "qos": "boucher-b",
+        "cpus-per-task": "32",
+        "Nodes": 1,
+        "mem": "256gb",
+        "runtime": "24:00:00",
+        "jobname": "rbrc",
+        "mail": "rvarki@ufl.edu",
+        "mail_type": "FAIL",
+        "out": "logs/rbr/SARS-CoV2/rbrc.%j.log",
+        "exclusive": "",
+        "specificPartition": ""
+    }
+}

@@ -1,0 +1,12 @@
+{
+  "workdir": "/blue/boucher/rvarki/justin_analysis",
+  "reference": "/blue/boucher/share/T2T_Complete/chromosome/uppercase_fasta/",
+  "script": "/home/jkim8/gitlab/rerepair/reRePair",
+  "pfp": "/home/jkim8/pfp/build/pfp++",
+  "ref": ["50"],
+  "prefix": ["T2T"],
+  "sample": "/blue/boucher/jkim8/rbr_tests/T2Tsamples/samples",
+  "vcf": "/blue/boucher/share/T2T_Complete/vcf/1000_Genomes_Project/all_samples_3202/",
+  "chr_num": ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22"]
+}
+

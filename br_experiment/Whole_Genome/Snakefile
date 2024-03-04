@@ -1,0 +1,101 @@
+import os
+
+# Constrain the wildcards
+wildcard_constraints:
+    ref= '|'.join([re.escape(x) for x in config["ref"]]),
+    prefix= '|'.join([re.escape(x) for x in config["prefix"]]),
+
+workdir: config['workdir']
+
+outfiles = []
+
+# Output files to generate
+for prefix in config["prefix"]:
+    for ref in config["ref"]:
+        outfiles.append("output/br/{prefix}/{ref}/{prefix}.{ref}.br.C".format(prefix=prefix,ref=ref))
+        outfiles.append("output/br/{prefix}/{ref}/{prefix}.{ref}.br.R".format(prefix=prefix,ref=ref))
+        #outfiles.append("output/br/{prefix}/{ref}/{prefix}.{ref}.br.out".format(prefix=prefix,ref=ref))
+        outfiles.append("output/br/{prefix}/{ref}/{prefix}.{ref}.br.log".format(prefix=prefix,ref=ref))
+
+        # outfiles.append("output/br/{prefix}/{ref}/{prefix}.{ref}.br.dicz".format(prefix=prefix,ref=ref))
+        # outfiles.append("output/br/{prefix}/{ref}/{prefix}.{ref}.br.dicz.len".format(prefix=prefix,ref=ref))
+        # outfiles.append("output/br/{prefix}/{ref}/{prefix}.{ref}.br.dict".format(prefix=prefix,ref=ref))
+        # outfiles.append("output/br/{prefix}/{ref}/{prefix}.{ref}.br.parse".format(prefix=prefix,ref=ref))
+
+chrVCFs = []
+for num in config["chr_num"]:
+    chrVCFs.append(config["vcf"] + "1KGP.CHM13v2.0.chr{num}.recalibrated.snp_indel.pass.vcf.gz".format(num=num))
+
+refChrs = []
+for num in config["chr_num"]:
+    refChrs.append(config["reference"] + "chm13v2.0.chr{num}.upper.fa.gz".format(num=num))
+
+##########################################################################################################
+def get_vcf_list(chrVCFs):
+    return ",".join(chrVCFs)
+def get_ref_list(refChrs):
+    return ",".join(refChrs)
+
+rule all:
+    input: outfiles
+
+rule pfp:
+    input:
+        ref    = refChrs,
+        pfp    = config["pfp"],
+        vcf    = chrVCFs,
+        sample = config["sample"] + "." + "{ref}"
+    benchmark: "benchmarks/br/{prefix}/{prefix}.{ref}.br.pfp.benchmark.txt",
+    threads: 64,
+    params:
+        outdir = "output/br/{prefix}/{ref}",
+        outprefix = "output/br/{prefix}/{ref}/{prefix}.{ref}.br",
+        vcf = get_vcf_list(chrVCFs),
+        ref = get_ref_list(refChrs),
+    output:
+        dicz = "output/br/{prefix}/{ref}/{prefix}.{ref}.br.dicz",
+        dicz_len = "output/br/{prefix}/{ref}/{prefix}.{ref}.br.dicz.len",
+        dict = "output/br/{prefix}/{ref}/{prefix}.{ref}.br.dict",
+        parse = "output/br/{prefix}/{ref}/{prefix}.{ref}.br.parse"
+    shell:
+        """
+        module load gcc
+        mkdir -p {params.outdir}
+        {input.pfp} -v {params.vcf} -S {input.sample} -r {params.ref} -w 10 -p 100 -c -o {params.outprefix} -j {threads} --tmp-dir ${{SLURM_TMPDIR}} --acgt-only --use-vcf-acceleration -H12
+        """
+
+rule br:
+    input:
+        dicz = "output/br/{prefix}/{ref}/{prefix}.{ref}.br.dicz",
+        parse = "output/br/{prefix}/{ref}/{prefix}.{ref}.br.parse",
+        script = config["script"]
+    benchmark: "benchmarks/br/{prefix}/{prefix}.{ref}.br.script.benchmark.txt",
+    threads: 32,
+    params:
+        outprefix = "output/br/{prefix}/{ref}/{prefix}.{ref}.br"
+    output:
+        C = "output/br/{prefix}/{ref}/{prefix}.{ref}.br.C",
+        R = "output/br/{prefix}/{ref}/{prefix}.{ref}.br.R",
+        log = "output/br/{prefix}/{ref}/{prefix}.{ref}.br.log"
+    shell:
+        """
+        module load gcc
+        {input.script} {params.outprefix} -t {threads} -k
+        """
+
+rule brc:
+    input:
+        C = "output/br/{prefix}/{ref}/{prefix}.{ref}.br.C",
+        R = "output/br/{prefix}/{ref}/{prefix}.{ref}.br.R",
+        script = config["script"],
+    benchmark: "benchmarks/br/{prefix}/{prefix}.{ref}.br.decompress.benchmark.txt",
+    threads: 32,
+    params:
+        outprefix = "output/br/{prefix}/{ref}/{prefix}.{ref}.br"
+    output:
+        decompress = "output/br/{prefix}/{ref}/{prefix}.{ref}.br.out"
+    shell:
+        """
+        module load gcc
+        {input.script} -d {params.outprefix} -t {threads} -k
+        """
