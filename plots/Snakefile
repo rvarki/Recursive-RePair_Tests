@@ -1,0 +1,96 @@
+import os
+
+# Constrain the wildcards
+wildcard_constraints:
+    rule= '|'.join([re.escape(x) for x in config["rules"]]),
+    ref= '|'.join([re.escape(x) for x in config["refs"]]),
+    tool= '|'.join([re.escape(x) for x in config["tools"]]),
+    prefix= '|'.join([re.escape(x) for x in config["prefix"]]),
+
+# Configure the working directory for the script
+workdir: config['workdir']
+
+count = 0
+for tool in config["tools"]:
+    count = 0
+    for prefix in config["prefix"]:
+        for rule in config["rules"]:
+            for ref in config["refs"]:
+                if count == 0:
+                    try:
+                        os.remove("plots/stats/{prefix}.{tool}.{rule}.benchmarks.txt".format(prefix=prefix,tool=tool,rule=rule))
+                    except FileNotFoundError:
+                        pass
+                    count += 1
+                if count != 0:
+                    with open("plots/stats/{prefix}.{tool}.{rule}.benchmarks.txt".format(prefix=prefix,tool=tool,rule=rule), "a+") as out:
+                        # Does not make any sense why the below line does not work
+                        # if os.path.exists("/blue/boucher/rvarki/justin_analysis/benchmarks/{tool}/{prefix}/{prefix}.{ref}.{tool}.{rule}.benchmark.txt".format(prefix=prefix, ref=ref, tool=tool, rule=rule) + "\n"):
+                        # Only keep the one write line if running anything other than T2T
+                        rbr_ref = ["50","100","200","300","400","600"]
+                        br_ref = ["50","100","200","300"]
+                        if (tool == "rbr" and ref in rbr_ref):
+                            out.write("benchmarks/{tool}/{prefix}/{prefix}.{ref}.{tool}.{rule}.benchmark.txt".format(prefix=prefix, ref=ref, tool=tool, rule=rule) + "\n")
+                        if (tool == "br" and ref in br_ref):
+                            out.write("benchmarks/{tool}/{prefix}/{prefix}.{ref}.{tool}.{rule}.benchmark.txt".format(prefix=prefix, ref=ref, tool=tool, rule=rule) + "\n")
+                    count += 1
+
+wall_clock_plots = []
+cpu_time_plots = []
+memory_plots = []
+for prefix in config["prefix"]:
+    for rule in config["rules"]:
+        wall_clock_plots.append("plots/plots/{prefix}/{prefix}.{rule}.sec.png".format(prefix=prefix, rule=rule))
+        cpu_time_plots.append("plots/plots/{prefix}/{prefix}.{rule}.cpu_time.png".format(prefix=prefix, rule=rule))
+        memory_plots.append("plots/plots/{prefix}/{prefix}.{rule}.max_rss.png".format(prefix=prefix, rule=rule))
+
+rule all:
+    input: wall_clock_plots, cpu_time_plots, memory_plots
+
+rule generate_rbr_benchmark_txt:
+    input:
+        benchmark = "plots/stats/{prefix}.rbr.{rule}.benchmarks.txt"
+    output:
+        csv = "plots/stats/{prefix}.rbr.{rule}.benchmarks.csv",
+    params:
+        script = workflow.source_path("scripts/benchmark_csv.py"),
+        current_directory = os.getcwd()
+    shell:
+        """
+        module load python/3.8
+        python3 {params.script} -i {input.benchmark} -o {output.csv} -c {params.current_directory}
+        """
+
+rule generate_br_benchmark_txt:
+    input:
+        benchmark = "plots/stats/{prefix}.br.{rule}.benchmarks.txt"
+    output:
+        csv = "plots/stats/{prefix}.br.{rule}.benchmarks.csv",
+    params:
+        script = workflow.source_path("scripts/benchmark_csv.py"),
+        current_directory = os.getcwd()
+    shell:
+        """
+        module load python/3.8
+        python3 {params.script} -i {input.benchmark} -o {output.csv} -c {params.current_directory}
+        """
+# Have to swap the plotting script depending on which experiment is plotting
+rule generate_benchmark_plots:
+    input:
+        rbr_csv = "plots/stats/{prefix}.rbr.{rule}.benchmarks.csv",
+        br_csv = "plots/stats/{prefix}.br.{rule}.benchmarks.csv",
+    output:
+        runtime = "plots/plots/{prefix}/{prefix}.{rule}.sec.png",
+        cpu =  "plots/plots/{prefix}/{prefix}.{rule}.cpu_time.png",
+        memory = "plots/plots/{prefix}/{prefix}.{rule}.max_rss.png"
+    params:
+        script = workflow.source_path("scripts/plot_benchmarks.py"),
+        outdir = "plots/plots/{prefix}/"
+    shell:
+        """
+        module load python/3.10
+        python3 {params.script} -r {input.rbr_csv} -b {input.br_csv} -o {params.outdir}
+        """
+    
+    
+    

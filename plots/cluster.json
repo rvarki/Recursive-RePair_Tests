@@ -1,0 +1,16 @@
+{
+    "__default__": {
+        "account": "boucher",
+        "qos": "boucher-b",
+        "cpus-per-task": "1",
+        "Nodes": 1,
+        "mem": "5gb",
+        "runtime": "24:00:00",
+        "jobname": "plot",
+        "mail": "rvarki@ufl.edu",
+        "mail_type": "FAIL",
+        "out": "logs/plots/plot.%j.log",
+        "exclusive": "",
+        "specificPartition": ""
+    }
+}
