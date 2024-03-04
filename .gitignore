@@ -2,3 +2,6 @@
 
 *.out
 *.log
+*.png
+*.csv
+*.txt
